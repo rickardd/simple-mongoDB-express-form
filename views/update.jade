@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  h1 Update user
+  form(action="/update/#{person._id}" method="POST")
+    p Name:
+      input(type="text" name="name" value="#{person.name}")
+    p Job:
+      input(type="text" name="job" value="#{person.job}")
+    button Update
+
