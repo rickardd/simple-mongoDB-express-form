@@ -18,7 +18,7 @@ const insertUser = function(doc, callback) {
   MongoClient.connect(url, function(err, client) {
     if(err) throw err;
     const db = client.db(dbName);
-    const collection = db.collection('documents');
+    const collection = db.collection('users');
 
     collection.insert( doc, function(err, doc) {
       if(err) throw err;
@@ -33,7 +33,7 @@ const findUsers = function(callback) {
   MongoClient.connect(url, function(err, client) {
     if(err) throw err;
     const db = client.db(dbName);
-    const collection = db.collection('documents');
+    const collection = db.collection('users');
 
     collection.find().toArray(function(err, docs) {
       if(err) throw err;
@@ -47,7 +47,7 @@ const findUser = function(id, callback) {
   MongoClient.connect(url, function(err, client) {
     if(err) throw err;
     const db = client.db(dbName);
-    const collection = db.collection('documents');
+    const collection = db.collection('users');
 
     collection.findOne({ _id: new mongo.ObjectId(id) }, (function(err, doc) {
       if(err) throw err;
@@ -61,7 +61,7 @@ const updateUser = function(id, doc, callback) {
   MongoClient.connect(url, function(err, client) {
     if(err) throw err;
     const db = client.db(dbName);
-    const collection = db.collection('documents');
+    const collection = db.collection('users');
 
     collection.update(
       { _id: new mongo.ObjectId( id) },
@@ -79,7 +79,7 @@ const deleteUser = function(id, callback) {
   MongoClient.connect(url, function(err, client) {
     if(err) throw err;
     const db = client.db(dbName);
-    const collection = db.collection('documents');
+    const collection = db.collection('users');
 
     collection.remove( { _id: new mongo.ObjectId(id) }, function(err, doc) {
         if(err) throw err;
