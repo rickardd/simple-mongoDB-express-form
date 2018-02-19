@@ -1,139 +1,124 @@
 const MongoClient = require('mongodb').MongoClient;
 const mongo = require('mongodb');
 const assert = require('assert');
-var express = require('express');
-var bodyParser = require('body-parser');
-// var mongo = require('mongodb');
-var http = require('http');
+const express = require('express');
+const bodyParser = require('body-parser');
+const http = require('http');
 
-var app = express();
-    // db = new mongo.Db('myapp', new mongo.Server( 'localhost', 27017, { auto_reconnect: true } )),
-    // people = db.collection('people');
-    //
+const app = express();
 
 const url = 'mongodb://localhost:27017';
-
 const dbName = 'myproject';
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 
-const insertDocuments = function(db, doc, callback) {
-  const collection = db.collection('documents');
-
-  collection.insert( doc, function(err, result) {
-    // assert.equal(err, null);
+const insertUser = function(doc, callback) {
+  MongoClient.connect(url, function(err, client) {
     if(err) throw err;
-    callback(result);
-  });
+    const db = client.db(dbName);
+    const collection = db.collection('documents');
 
-}
-
-const findDocuments = function(db, callback) {
-  const collection = db.collection('documents');
-
-  collection.find().toArray(function(err, docs) {
-    // assert.equal(err, null);
-    if(err) throw err;
-    callback(docs);
-  });
-}
-
-const findUser = function(db, id, callback) {
-  const collection = db.collection('documents');
-
-  collection.findOne({ _id: new mongo.ObjectId(id) }, (function(err, doc) {
-    // assert.equal(err, null);
-    if(err) throw err;
-    callback(doc);
-  }));
-}
-
-const updateUser = function(db, id, doc, callback) {
-  const collection = db.collection('documents');
-
-  collection.update(
-    { _id: new mongo.ObjectId( id) },
-    doc,
-    function(err, doc) {
-      // assert.equal(err, null);
+    collection.insert( doc, function(err, doc) {
       if(err) throw err;
       callback(doc);
-    }
-  );
-}
+      client.close();
+    });
 
+  });
+};
 
+const findUsers = function(callback) {
+  MongoClient.connect(url, function(err, client) {
+    if(err) throw err;
+    const db = client.db(dbName);
+    const collection = db.collection('documents');
 
-
-// Use connect method to connect to the server
-MongoClient.connect(url, function(err, client) {
-  // assert.equal(null, err);
-  if(err) throw err;
-  console.log("Connected successfully to server");
-
-  const db = client.db(dbName);
-
-  // GET /
-  app.get('/', function( req, res ) {
-    findDocuments(db, function( docs ) {
-      console.log('initssdsdf');
-      res.render('index.jade', {people: docs });
+    collection.find().toArray(function(err, docs) {
+      if(err) throw err;
+      callback(docs);
       client.close();
     });
   });
+};
 
+const findUser = function(id, callback) {
+  MongoClient.connect(url, function(err, client) {
+    if(err) throw err;
+    const db = client.db(dbName);
+    const collection = db.collection('documents');
 
-  // GET /new
-  app.get('/new', function( req, res ) {
-    res.render('index.jade', {people: [] });
-  });
-
-  // POST /new
-  app.post('/new', function( req, res ) {
-
-    let doc = { name: req.body.name, job: req.body.job };
-
-    insertDocuments(db, doc, function() {
-      // res.send('/new');
-      console.log('inser documents...');
-      res.redirect('/');
-      // res.render('index.jade', {people: [] });
-    });
-  });
-
-  // GET /update/:id
-  app.get('/update/:id', function( req, res ) {
-
-    let id = req.params.id;
-
-    findUser( db, id, function ( doc ) {
-      // res.send(doc);
-      res.render('update.jade', { person: doc });
+    collection.findOne({ _id: new mongo.ObjectId(id) }, (function(err, doc) {
+      if(err) throw err;
+      callback(doc);
       client.close();
-    });
+    }));
   });
+};
 
+const updateUser = function(id, doc, callback) {
+  MongoClient.connect(url, function(err, client) {
+    if(err) throw err;
+    const db = client.db(dbName);
+    const collection = db.collection('documents');
 
-  // POST /update/:id
-  app.post('/update/:id', function( req, res ) {
-
-    let id = req.params.id;
-
-    let doc = { name: req.body.name, job: req.body.job };
-
-    updateUser( db, id, doc, function () {
-      console.log('doc---' );
-      console.log(doc );
-      res.send('user updated');
-
-      // res.render('update.jade', { person: doc });
-      client.close();
-    });
+    collection.update(
+      { _id: new mongo.ObjectId( id) },
+      doc,
+      function(err, doc) {
+        if(err) throw err;
+        callback(doc);
+        client.close();
+      }
+    );
   });
+};
 
+
+// GET /
+app.get('/', function( req, res ) {
+  findUsers( function( docs ) {
+    res.render('index.jade', {people: docs });
+  });
 });
+
+
+// GET /new
+app.get('/new', function( req, res ) {
+  res.render('index.jade', {people: [] });
+});
+
+// POST /new
+app.post('/new', function( req, res ) {
+  let doc = { name: req.body.name, job: req.body.job };
+
+  insertUser(doc, function() {
+    console.log('inser documents...');
+    res.redirect('/');
+  });
+});
+
+// GET /update/:id
+app.get('/update/:id', function( req, res ) {
+  let id = req.params.id;
+
+  findUser( id, function ( doc ) {
+    res.render('update.jade', { person: doc });
+  });
+});
+
+
+// POST /update/:id
+app.post('/update/:id', function( req, res ) {
+  const id = req.params.id;
+  const doc = { name: req.body.name, job: req.body.job };
+
+  updateUser( id, doc, function () {
+    res.send('user updated');
+  });
+});
+
 
 http.createServer(app).listen(3000)
 
