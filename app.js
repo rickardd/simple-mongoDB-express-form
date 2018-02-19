@@ -75,6 +75,20 @@ const updateUser = function(id, doc, callback) {
   });
 };
 
+const deleteUser = function(id, callback) {
+  MongoClient.connect(url, function(err, client) {
+    if(err) throw err;
+    const db = client.db(dbName);
+    const collection = db.collection('documents');
+
+    collection.remove( { _id: new mongo.ObjectId(id) }, function(err, doc) {
+        if(err) throw err;
+        callback( doc);
+        client.close();
+    });
+  });
+};
+
 
 // GET /
 app.get('/', function( req, res ) {
@@ -82,7 +96,6 @@ app.get('/', function( req, res ) {
     res.render('index.jade', {people: docs });
   });
 });
-
 
 // GET /new
 app.get('/new', function( req, res ) {
@@ -94,7 +107,6 @@ app.post('/new', function( req, res ) {
   let doc = { name: req.body.name, job: req.body.job };
 
   insertUser(doc, function() {
-    console.log('inser documents...');
     res.redirect('/');
   });
 });
@@ -115,7 +127,16 @@ app.post('/update/:id', function( req, res ) {
   const doc = { name: req.body.name, job: req.body.job };
 
   updateUser( id, doc, function () {
-    res.send('user updated');
+    res.redirect('/');
+  });
+});
+
+// GET /delete/:id
+app.get('/delete/:id', function( req, res ) {
+  let id = req.params.id;
+
+  deleteUser( id, function ( doc ) {
+    res.redirect('/');
   });
 });
 
